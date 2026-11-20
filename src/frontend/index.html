@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="color-scheme" content="light dark" />
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f6f7fb" />
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#171a23" />
+<meta name="app-version" content="dev" />
+<title>NesBattle · NES 在线对战平台</title>
+<link rel="stylesheet" href="styles.css" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>" />
+</head>
+<body>
+<div id="app">
+
+  <!-- 顶部导航栏 -->
+  <header class="topbar">
+    <div class="brand" data-nav="home">
+      <span class="brand-logo">🎮</span><span class="brand-name">Nes<em>Battle</em></span>
+    </div>
+    <nav class="topnav">
+      <a href="#" data-nav="home" class="active">大厅</a>
+      <a href="#" data-nav="settings">设置</a>
+    </nav>
+    <!-- 游玩页的操作按钮与状态，仅在游玩界面显示（位于最顶部导航栏内） -->
+    <div class="play-toolbar" id="play-toolbar">
+      <div class="play-title" id="play-title">游戏</div>
+      <div class="play-status">
+        <span id="seat-tag" class="tag"></span>
+        <span id="net-tag" class="tag"></span>
+        <span id="fps-tag" class="tag"></span>
+      </div>
+      <div class="play-actions">
+        <button id="btn-fullscreen" class="btn ghost" type="button">全屏</button>
+        <button id="btn-reset" class="btn ghost" type="button">复位</button>
+        <button id="btn-pause" class="btn ghost" type="button">暂停</button>
+        <button id="btn-save" class="btn ghost" type="button">存档</button>
+        <button id="btn-back" class="btn ghost" type="button">退出</button>
+      </div>
+    </div>
+    <div class="userbox" id="user-area"></div>
+  </header>
+
+  <main id="main">
+    <!-- 首页大厅 -->
+    <section id="page-home" class="page active">
+      <div class="section-head">
+        <h2>🔴 正在游玩</h2>
+        <span class="sub" id="online-count"></span>
+      </div>
+      <div id="live-list" class="live-grid"><div class="placeholder">暂无进行中的对局，挑一款游戏创建房间吧</div></div>
+
+      <div class="section-head">
+        <h2>⭐ 常玩</h2>
+        <button id="clear-recent" class="btn ghost" type="button">清空</button>
+      </div>
+      <div id="recent-grid" class="game-grid"><div class="placeholder">还没有常玩游戏</div></div>
+
+      <div class="section-head">
+        <h2>🕹️ 游戏库</h2>
+        <input id="game-search" class="search" type="text" placeholder="搜索游戏…" />
+      </div>
+      <div id="game-grid" class="game-grid"><div class="placeholder">加载中…</div></div>
+      <div id="game-pagination" class="pagination hidden" aria-label="游戏库分页">
+        <button id="game-prev" class="btn ghost" type="button">上一页</button>
+        <span id="game-page-info" class="page-info"></span>
+        <button id="game-next" class="btn ghost" type="button">下一页</button>
+      </div>
+      <footer class="footer">
+        <p>游戏内容及相关知识产权归任天堂及相关权利人所有，本项目仅供学习交流使用。</p>
+        <p>今日游玩人数：<b id="today-play-count">0</b>　历史游玩人数：<b id="history-play-count">0</b></p>
+        <p>版本：<span id="app-version">dev</span></p>
+        <p>Powered by <a href="http://zgcwkj.cn" target="_blank" rel="noopener">zgcwkj</a></p>
+      </footer>
+    </section>
+
+    <!-- 游玩界面 -->
+    <section id="page-play" class="page">
+      <div id="stage" class="stage">
+        <canvas id="screen" width="256" height="240"></canvas>
+        <div id="play-overlay" class="play-overlay hidden"></div>
+      </div>
+      <!-- 触屏虚拟手柄，触屏设备或开启设置后显示 -->
+      <div id="touch-pad" class="touchpad">
+        <div class="pad-left">
+          <button class="tp" type="button" data-key="up" aria-label="上">▲</button>
+          <button class="tp" type="button" data-key="left" aria-label="左">◀</button>
+          <button class="tp" type="button" data-key="right" aria-label="右">▶</button>
+          <button class="tp" type="button" data-key="down" aria-label="下">▼</button>
+        </div>
+        <div class="pad-mid">
+          <button class="tp small" type="button" data-key="select" aria-label="选择">SELECT</button>
+          <button class="tp small" type="button" data-key="start" aria-label="开始">START</button>
+        </div>
+        <div class="pad-right">
+          <button class="tp round" type="button" data-key="aa" aria-label="A 连发">AA</button>
+          <button class="tp round" type="button" data-key="bb" aria-label="B 连发">BB</button>
+          <button class="tp round" type="button" data-key="a" aria-label="A 键">A</button>
+          <button class="tp round" type="button" data-key="b" aria-label="B 键">B</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 设置界面 -->
+    <section id="page-settings" class="page">
+      <h2>⚙️ 通用设置</h2>
+      <div class="settings-card">
+        <label class="row">
+          <span class="row-label">昵称</span>
+          <input id="set-name" type="text" maxlength="12" placeholder="玩家昵称" />
+        </label>
+        <div class="row">
+          <span class="row-label">按键布局 <small>（P1 / P2 通用）</small></span>
+          <div class="keymap" id="keymap"></div>
+        </div>
+        <label class="row">
+          <span class="row-label">音量</span>
+          <input id="set-volume" type="range" min="0" max="100" value="60" />
+          <span id="vol-label">60%</span>
+        </label>
+        <label class="row">
+          <span class="row-label">CRT 扫描线滤镜</span>
+          <input id="set-crt" type="checkbox" />
+        </label>
+        <label class="row">
+          <span class="row-label">始终显示虚拟手柄</span>
+          <input id="set-touch" type="checkbox" />
+        </label>
+        <button id="btn-save-settings" class="btn primary" type="button">保存设置</button>
+      </div>
+      <p class="hint">
+        改键：点击按键布局中的按钮后按下键盘或手柄按键。手柄支持按钮、十字键和摇杆方向；未连接手柄时请先连接后再改键。AA/BB 是 A/B 的连发键。
+        <br />
+        默认：<b>方向键</b>移动，<b>J</b>=A，<b>K</b>=B，<b>U</b>=AA，<b>I</b>=BB，<b>回车</b>=START，<b>右Shift</b>=SELECT。
+        <br />
+        另外以下键位始终生效：<b>WASD</b> 移动，<b>Z</b> / <b>X</b>、<b>空格</b> = 普通射击键。
+      </p>
+    </section>
+  </main>
+
+  <!-- 通用模态框 -->
+  <div id="modal" class="modal hidden">
+    <div class="modal-card">
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <!-- 轻提示 -->
+  <div id="toast" class="toast hidden"></div>
+</div>
+
+<script src="lib/jsnes.min.js"></script>
+<script src="js/main.js" type="module"></script>
+</body>
+</html>

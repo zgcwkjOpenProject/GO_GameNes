@@ -1,0 +1,6 @@
+# 排除项
+*.exe
+*.exe~
+build/
+dist/
+data/
